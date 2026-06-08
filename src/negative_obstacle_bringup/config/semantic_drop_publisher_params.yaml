@@ -1,0 +1,39 @@
+# SemanticDropPublisher ROS 2 node parametreleri
+semantic_drop_publisher:
+  ros__parameters:
+    # Kamera ayarları
+    image_width:      320
+    image_height:     240
+    fov_h_deg:        70.0
+    use_camera_info:  false   # true: /camera/depth/camera_info'dan otomatik al
+    depth_topic: /camera/depth/image_raw
+    camera_info_topic: /camera/depth/camera_info
+    drop_points_topic: /semantic_drop_points
+    drop_probability_topic: /risk/drop_probability
+    risk_cost_topic: /risk/cost_image
+
+    # Kamera montaj geometrisi
+    # URDF: wheel_radius(0.19) + base_height/2+0.03(0.08) = 0.27 m yerden
+    # Gerçek robotta ölçülerek ayarlanmalıdır.
+    camera_height_m:   0.27
+    camera_pitch_deg: -20.0
+
+    # Risk algı eşikleri
+    jump_threshold_m:  0.12   # komşu piksel derinlik farkı eşiği
+    drop_threshold_m:  0.08   # zemin altı mesafe eşiği
+    depth_dilation_m:  0.05   # edge noktalarını drop tarafına kaydır
+
+    # Ground estimator (RANSAC) ve belirsizlik-duyarlı risk alanı.
+    # Çıktılar:
+    #   /semantic_drop_points      -> STVL için drop-edge PointCloud2
+    #   /risk/drop_probability     -> 32FC1 P(drop)
+    #   /risk/cost_image           -> mono8 dereceli risk/cost alanı
+    use_ground_estimator: true
+
+    # Temporal biriktiricisi
+    temporal_window_sec: 1.5
+    max_points:          3000
+    voxel_size:          0.05
+
+    # Yayın çerçevesi
+    publish_frame_id: base_link

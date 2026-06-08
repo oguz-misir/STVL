@@ -1,0 +1,20 @@
+{
+  "total_evaluated": 340,
+  "total_skipped": 0,
+  "positive_scenes": {
+    "count": 230,
+    "mean_drop_recall": 0.699,
+    "mean_false_safe_rate": 0.301,
+    "mean_drop_precision": 0.7579,
+    "mean_edge_f1": 0.4641
+  },
+  "hard_negative_scenes": {
+    "count": 110,
+    "mean_false_positive_rate": 0.182
+  },
+  "settings": {
+    "use_ground_estimator": true,
+    "jump_threshold_m": 0.12,
+    "drop_threshold_m": 0.08
+  }
+}

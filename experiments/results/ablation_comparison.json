@@ -1,0 +1,102 @@
+[
+  {
+    "config_name": "A1_baseline_edge_only",
+    "description": "Sadece depth discontinuity tespiti; ground tahmini yok, temporal yok.",
+    "total": 340,
+    "positive": {
+      "count": 230,
+      "drop_recall": 0.0266,
+      "false_safe_rate": 0.9734,
+      "drop_precision": 0.4658,
+      "edge_f1": 0.4641
+    },
+    "hard_negative": {
+      "count": 110,
+      "fpr": 0.0049
+    },
+    "latency_ms": {
+      "mean": 5.92,
+      "p95": 8.8
+    }
+  },
+  {
+    "config_name": "A2_ground_plus_edge",
+    "description": "RANSAC zemin tahmini + depth discontinuity birleşimi.",
+    "total": 340,
+    "positive": {
+      "count": 230,
+      "drop_recall": 0.699,
+      "false_safe_rate": 0.301,
+      "drop_precision": 0.7579,
+      "edge_f1": 0.4641
+    },
+    "hard_negative": {
+      "count": 110,
+      "fpr": 0.182
+    },
+    "latency_ms": {
+      "mean": 40.73,
+      "p95": 52.61
+    }
+  },
+  {
+    "config_name": "A3_ground_plus_edge_temporal",
+    "description": "A2 + 1.5 saniyelik temporal nokta biriktiricisi.",
+    "total": 340,
+    "positive": {
+      "count": 230,
+      "drop_recall": 0.7144,
+      "false_safe_rate": 0.2856,
+      "drop_precision": 0.7267,
+      "edge_f1": 0.4641
+    },
+    "hard_negative": {
+      "count": 110,
+      "fpr": 0.1967
+    },
+    "latency_ms": {
+      "mean": 40.65,
+      "p95": 51.95
+    }
+  },
+  {
+    "config_name": "A4_aggressive_thresholds",
+    "description": "Daha agresif eşikler — yüksek recall, potansiyel false positive artışı.",
+    "total": 340,
+    "positive": {
+      "count": 230,
+      "drop_recall": 0.8023,
+      "false_safe_rate": 0.1977,
+      "drop_precision": 0.6832,
+      "edge_f1": 0.4404
+    },
+    "hard_negative": {
+      "count": 110,
+      "fpr": 0.3101
+    },
+    "latency_ms": {
+      "mean": 41.25,
+      "p95": 53.11
+    }
+  },
+  {
+    "config_name": "A5_conservative_thresholds",
+    "description": "Muhafazakâr eşikler — düşük false positive, potansiyel recall kaybı.",
+    "total": 340,
+    "positive": {
+      "count": 230,
+      "drop_recall": 0.6253,
+      "false_safe_rate": 0.3747,
+      "drop_precision": 0.761,
+      "edge_f1": 0.3327
+    },
+    "hard_negative": {
+      "count": 110,
+      "fpr": 0.1358
+    },
+    "latency_ms": {
+      "mean": 41.34,
+      "p95": 51.54
+    }
+  }
+]

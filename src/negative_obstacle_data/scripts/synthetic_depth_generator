@@ -1,0 +1,3 @@
+#!/usr/bin/env python3
+from negative_obstacle_data.synthetic_depth_generator import main
+main()

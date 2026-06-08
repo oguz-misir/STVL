@@ -1,0 +1,45 @@
+# Local agent/tool state
+.agents/
+.claude/
+.codex/
+CLAUDE.md
+
+# ROS/colcon generated outputs
+build/
+install/
+log/
+manuscript/build/
+manuscript/install/
+manuscript/log/
+
+# Generated datasets and large artifacts
+data/
+*.bag
+*.db3
+*.mcap
+*.npy
+*.npz
+
+# Python caches and test caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# LaTeX generated files
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
+*.toc
+*.synctex.gz
+
+# Editor/local machine files
+.vscode/
+.idea/
+*.swp
+*~
+
+# OS files
+.DS_Store
+Thumbs.db

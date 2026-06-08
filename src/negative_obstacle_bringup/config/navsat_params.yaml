@@ -1,0 +1,38 @@
+# navsat_transform_node parametreleri
+# GPS (NavSatFix) → ENU odometri dönüşümü
+#
+# Girdi:  /fix (sensor_msgs/NavSatFix)
+#         /imu/data (sensor_msgs/Imu) — heading için
+#         /odometry/filtered — yerel EKF çıkışı (referans)
+# Çıktı:  /odometry/gps → ekf_global'e beslenir
+
+navsat_transform_node:
+  ros__parameters:
+    frequency: 30.0
+    delay: 3.0                           # GPS fix stabilize olana kadar bekle (s)
+
+    # Manyetik sapma (Türkiye için ~+5.5°, bölgeye göre düzenle)
+    # https://www.ngdc.noaa.gov/geomag/calculators/magcalc.shtml
+    magnetic_declination_radians: 0.096  # ~5.5 derece → radyan
+
+    # Başlangıçta robotun GPS'e göre yönü (robot kuzey'e bakıyorsa 0)
+    # Robotu bilinen bir yöne hizalayıp başlatın.
+    yaw_offset: 0.0
+
+    # Yüksekliği sıfırla (2B navigasyon için)
+    zero_altitude: true
+
+    # UTM dönüşümü yayınlama (gerekmez)
+    broadcast_utm_transform: false
+    broadcast_utm_transform_as_parent_frame: false
+
+    # Filtrelenmiş GPS konumu yayınlama (opsiyonel — mapviz için açılabilir)
+    publish_filtered_gps: true
+
+    # IMU yaw'ı mı yoksa odometri yaw'ı mı kullanılsın?
+    # false → IMU heading kullan (Witmotion HWT905 orientation verir)
+    use_odometry_yaw: false
+
+    # Başlangıç datum beklensin mi? (false → ilk GPS fix'i datum olarak kullan)
+    wait_for_datum: false
+    # datum: [lat, lon, yaw]  # wait_for_datum: true ise buraya gir

@@ -1,0 +1,33 @@
+{
+  "total_samples": 340,
+  "total_scenes": 340,
+  "scene_type_distribution": {
+    "circular_pit": 40,
+    "curb_drop": 30,
+    "platform_edge": 40,
+    "ramp_hard_negative": 50,
+    "rectangular_pit": 50,
+    "shadow_hard_negative": 30,
+    "stairs_descent": 30,
+    "trench": 40,
+    "uneven_ground_hard_negative": 30
+  },
+  "has_negative_obstacle_count": 230,
+  "hard_negative_count": 110,
+  "label_pixel_ratios": {
+    "SAFE": 0.7313,
+    "UNCERTAIN": 0.0129,
+    "UNSAFE_SOLID": 0.0,
+    "UNSAFE_DROP": 0.2558
+  },
+  "average_edge_pixel_ratio": 0.0164,
+  "split_distribution": {
+    "train": 237,
+    "val": 51,
+    "test": 52
+  },
+  "scene_leakage_clean": true,
+  "warnings": {
+    "hard_negative_with_unsafe_drop": []
+  }
+}

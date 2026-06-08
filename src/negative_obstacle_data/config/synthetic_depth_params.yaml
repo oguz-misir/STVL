@@ -1,0 +1,26 @@
+# Default parameters for synthetic depth generator
+camera:
+  height_m_min: 0.35
+  height_m_max: 0.60
+  pitch_deg_min: -35.0
+  pitch_deg_max: -15.0
+
+ground:
+  slope_deg_min: -3.0
+  slope_deg_max: 3.0
+
+drop:
+  depth_m_min: 0.20
+  depth_m_max: 0.80
+  width_m_min: 0.30
+  width_m_max: 1.20
+
+noise:
+  std_min: 0.005
+  std_max: 0.025
+  missing_ratio_min: 0.01
+  missing_ratio_max: 0.05
+
+image:
+  default_width: 320
+  default_height: 240

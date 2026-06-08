@@ -1,0 +1,429 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage[margin=2.2cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{hyperref}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.6em}
+\renewcommand{\arraystretch}{1.15}
+\hypersetup{colorlinks=true,linkcolor=blue,urlcolor=blue}
+
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcommand{\term}[1]{\texttt{\detokenize{#1}}}
+\newcommand{\cmd}[1]{\texttt{\detokenize{#1}}}
+\newcommand{\mainsketch}{4\_4\_rc\_kontrol.ino}
+
+\title{\mainsketch{} Kisa Kullanim Kilavuzu}
+\author{}
+\date{\today}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Amac}
+Bu dokuman sadece \mainsketch{} icin guncel davranisi kisa ve pratik bicimde anlatir.
+Odak noktasi:
+\begin{itemize}
+  \item hangi komutlarin gecerli oldugu
+  \item seri hatta surekli gelen satirlarin anlami
+  \item RC ve serial modun nasil secildigi
+\end{itemize}
+
+\section{Kullanilan Dosya}
+Bu belge yalnizca \mainsketch{} icin hazirlanmistir.
+
+\section{PWM Pin Eslesmesi}
+Guncel motor PWM pin eslesmesi:
+\begin{itemize}
+  \item FL: \term{LPWM=2}, \term{RPWM=3}
+  \item FR: \term{LPWM=10}, \term{RPWM=9}
+  \item RL: \term{LPWM=6}, \term{RPWM=5}
+  \item RR: \term{LPWM=11}, \term{RPWM=12}
+\end{itemize}
+
+\section{Ana Calisma Mantigi}
+\begin{itemize}
+  \item CH1 direksiyon kanali olarak kullanilir.
+  \item CH2 enable / mode kanali olarak kullanilir.
+  \item CH3 gaz kanali olarak kullanilir.
+  \item Varsayilan surus kanali \term{CH3}, enable kanali \term{CH2}'dir.
+  \item CH2 aktif ve arm tamamlanmis ise robot RC modunda surulur.
+  \item CH2 pasifken serial pair PWM veya tek teker RPM komutlari kullanilabilir.
+  \item CH2 pasif ve aktif serial komut yoksa robot \term{BEKLEME} modundadir.
+  \item Iki durumda da encoder RPM okunur.
+  \item Ileri ve geri suruste hiz tavani maksimum PWM'in \%60'i ile sinirlidir.
+  \item Yumusak durus vardir; ileri/geri ve throttle ile donuste cikislar PWM adimlariyla yavaslar.
+  \item Teker hiz dengeleme vardir.
+  \item Throttle ile giderken sag ve sol hiz farki kullanilir; agresif miks ile ic taraf daha sert duser ve yuksek steering'de hafif ters yone de gecilebilir.
+  \item Ileri giderken bir anda geri komut gelirse, disli korumasi icin kontrollu yon degisimi vardir.
+  \item Seri telemetride hem teker RPM'leri hem de teker/robot lineer hizlari verilir.
+\end{itemize}
+
+\section{Seri Port Ayarlari}
+Bu dosya icin seri ayarlar:
+\begin{itemize}
+  \item Baud: \term{115200}
+  \item Data bits: \term{8}
+  \item Parity: \term{None}
+  \item Stop bit: \term{1}
+  \item Line ending: \term{Newline} veya \term{Both NL \& CR}
+\end{itemize}
+
+\section{Hiz Hesabi}
+Bu kilavuzdaki lineer hiz alanlari asagidaki varsayimla hesaplanir:
+\begin{itemize}
+  \item Teker yaricapi: \term{19.0 cm}
+  \item Teker cevresi: yaklasik \term{119.38 cm}
+  \item Teker hizi: \term{RPM x cevre / 60}
+\end{itemize}
+
+Bu nedenle RPM degismez; yalnizca \term{cm/s} cinsinden hiz alanlari bu yaricap bilgisine gore hesaplanir.
+
+\section{Acilis Kalibrasyonu}
+Kart acildiginda RC kanallari kisa bir ornekleme ile merkezlenir ve guvenli araliklar otomatik ayarlanir.
+\begin{itemize}
+  \item Boot sirasinda \term{RC_CALIBRATED}, \term{RC_CALIBRATED_RELAXED} veya gerekirse \term{RC_CALIBRATED_FALLBACK} satiri gorulebilir.
+  \item Ardindan \term{RC_CHANNEL_MAP STEERING=CH1 THROTTLE=CH3 ENABLE=CH2} yazisi gelir.
+  \item RC merkezleri boot sirasinda olculur.
+  \item RC hazir durumu icin once kumandanin notr oldugu dogrulanir.
+  \item Ardindan \term{RC_SAFE_READY} satiri gorunur.
+  \item CH2 zaten aktifse ve kumanda notrde kalirsa yaklasik \term{800 ms} sonra \term{RC_ENABLE_HELD_AUTO_ARM} ve ardindan \term{RC_ARMED} gorulebilir.
+  \item Bu asamada \term{RC_NEUTRAL_WINDOWS} satiri, notr pencerelerin o anki degerini bildirir.
+\end{itemize}
+
+\section{Komutlar}
+\subsection{Gecerli Komut Formatlari}
+Asagidaki komutlar kullanilabilir:
+\begin{verbatim}
+PWM 100 100
+100 100
+100,100
+100
+FL 100
+FR 100
+RL 100
+RR 100
+STOP
+\end{verbatim}
+
+\subsection{Komutlarin Anlami}
+\begin{tabularx}{\linewidth}{@{}p{4.0cm}Y@{}}
+\toprule
+\textbf{Komut} & \textbf{Anlam} \\
+\midrule
+\cmd{PWM 100 100} & \cmd{100 100} ile ayni; ileri \\
+\cmd{100 100} & Ileri \\
+\cmd{100,100} & \cmd{100 100} ile ayni; ileri \\
+\cmd{100} & Sol ve sag tarafi ayni degerle ileri sur \\
+\cmd{-100 -100} & Geri \\
+\cmd{100 -100} & Saga donus / sag pivot \\
+\cmd{-100 100} & Sola donus / sol pivot \\
+\cmd{FL 100} & Sadece FL teker icin hedef RPM testi \\
+\cmd{FR 100} & Sadece FR teker icin hedef RPM testi \\
+\cmd{RL 100} & Sadece RL teker icin hedef RPM testi \\
+\cmd{RR 100} & Sadece RR teker icin hedef RPM testi \\
+\cmd{STOP} & Dur \\
+\bottomrule
+\end{tabularx}
+
+\subsection{Onemli Not}
+\mainsketch{} icinde serial komutlar sadece CH2 pasifken etkili olur.
+
+Ayrica serial pair PWM komutlari tek seferlik degildir; komutun taze kalmasi gerekir. Yaklasik \term{400 ms} icinde yeni komut gelmezse sistem beklemeye gecer. Bu nedenle PC tarafindan \cmd{100 100} gibi pair komutlari ile surus verilecekse komutlar periyodik olarak tekrar gonderilmelidir.
+
+Tek teker RPM test komutlari (\cmd{FL 100}, \cmd{FR 100} gibi) ise \term{STOP} gelene kadar aktif kalir.
+
+\section{Surekli Gelen Seri Satirlar}
+Bu bolumde sadece seri hatta surekli akan satirlar anlatilir. Baslangic sirasinda bir kez gorulen kalibrasyon veya acilis mesajlari burada bilerek verilmemistir.
+
+Bu dosyada surekli gorulebilen satirlar:
+\begin{itemize}
+  \item \term{JS}
+  \item \term{RC}
+  \item \term{RCDBG}
+  \item \term{WTEST}
+  \item \term{MODE}
+  \item \term{CMD_DIR}
+\end{itemize}
+
+\subsection{Telemetri Basliklari}
+\subsubsection{JS}
+Format:
+\begin{verbatim}
+JS seq t_us FLrpm10 FRrpm10 RLrpm10 RRrpm10 pwmL pwmR
+   FLcmps10 FRcmps10 RLcmps10 RRcmps10 RobotCmps10
+\end{verbatim}
+
+Anlam:
+\begin{itemize}
+  \item \term{seq}: paket sirasi
+  \item \term{t_us}: mikro saniye zaman damgasi
+  \item \term{FLrpm10}, \term{FRrpm10}, \term{RLrpm10}, \term{RRrpm10}: encoder RPM x10
+  \item \term{pwmL}, \term{pwmR}: uygulanan sol ve sag cikis PWM'i
+  \item \term{FLcmps10}, \term{FRcmps10}, \term{RLcmps10}, \term{RRcmps10}: teker lineer hizi, \term{cm/s x10}
+  \item \term{RobotCmps10}: dort tekerden uretilen robot lineer hizi, \term{cm/s x10}
+\end{itemize}
+
+Ornek:
+\begin{verbatim}
+JS 152 12345678 520 515 501 509 -180 -180 1035 1025 996 1013 1017
+\end{verbatim}
+
+Bu ornekte:
+\begin{itemize}
+  \item FL = 52.0 RPM
+  \item FR = 51.5 RPM
+  \item RL = 50.1 RPM
+  \item RR = 50.9 RPM
+  \item sol ve sag cikis PWM = -180
+  \item FL hizi = 103.5 cm/s
+  \item FR hizi = 102.5 cm/s
+  \item RL hizi = 99.6 cm/s
+  \item RR hizi = 101.3 cm/s
+  \item robot hizi = 101.7 cm/s
+\end{itemize}
+
+\subsubsection{RC}
+Format:
+\begin{verbatim}
+RC ch1_us ch2_us ch3_us ch1_ok ch2_ok ch3_ok
+\end{verbatim}
+
+Anlam:
+\begin{itemize}
+  \item \term{ch1_us}: direksiyon kanali
+  \item \term{ch2_us}: enable / mode secim kanali
+  \item \term{ch3_us}: gaz kanali
+  \item \term{ch1_ok}, \term{ch2_ok}, \term{ch3_ok}: sinyal gecerli mi bilgisi
+\end{itemize}
+
+\subsubsection{MODE}
+Format:
+\begin{verbatim}
+MODE RC_KUMANDA_AKTIF
+MODE SERI_PWM_AKTIF
+MODE SERI_WHEEL_AKTIF
+MODE BEKLEME
+\end{verbatim}
+
+Anlam:
+\begin{itemize}
+  \item \cmd{MODE RC_KUMANDA_AKTIF}: CH2 aktif, arm tamam ve kontrol RC kumandada
+  \item \cmd{MODE SERI_PWM_AKTIF}: CH2 pasif, kontrol serial pair PWM komutlarinda
+  \item \cmd{MODE SERI_WHEEL_AKTIF}: CH2 pasif, tek teker RPM test modu aktif
+  \item \cmd{MODE BEKLEME}: aktif komut yok, robot beklemede
+\end{itemize}
+
+\subsubsection{RCDBG}
+Format:
+\begin{verbatim}
+RCDBG throttlePwm steeringPwm pwmLCmd pwmRCmd pwmLout pwmRout
+      neutralReady controlArmed enableReleased enableLatched
+\end{verbatim}
+
+Anlam:
+\begin{itemize}
+  \item Ilk 6 alan RC ic isleminde olusan PWM degerleridir.
+  \item Son 4 alan sirasiyla \term{notr hazir}, \term{arm tamam}, \term{enable once birakildi mi}, \term{enable aktif mi} bilgisini verir.
+\end{itemize}
+
+\subsubsection{WTEST}
+Format:
+\begin{verbatim}
+WTEST wheel target_rpm measured_rpm10 applied_pwm
+      FLrpm10 FRrpm10 RLrpm10 RRrpm10
+\end{verbatim}
+
+Anlam:
+\begin{itemize}
+  \item \term{wheel}: test edilen teker (\term{FL}, \term{FR}, \term{RL}, \term{RR})
+  \item \term{target_rpm}: istenen RPM
+  \item \term{measured_rpm10}: secili tekerin olculen RPM x10 degeri
+  \item \term{applied_pwm}: secili tekere uygulanan PWM
+  \item Son 4 alan: tum tekerlerin encoder RPM x10 degerleri
+\end{itemize}
+
+\subsubsection{CMD\_DIR}
+Format:
+\begin{verbatim}
+CMD_DIR FWD
+CMD_DIR REV
+CMD_DIR TURN_LEFT
+CMD_DIR TURN_RIGHT
+CMD_DIR STOP
+CMD_DIR IDLE
+CMD_DIR RC_MODE
+CMD_DIR FL
+CMD_DIR FR
+CMD_DIR RL
+CMD_DIR RR
+\end{verbatim}
+
+Anlam:
+\begin{itemize}
+  \item \term{FWD}: serial komutta ileri
+  \item \term{REV}: serial komutta geri
+  \item \term{TURN_LEFT}: serial komutta sola donus
+  \item \term{TURN_RIGHT}: serial komutta saga donus
+  \item \term{STOP}: serial komutta durus
+  \item \term{IDLE}: aktif serial komut yok
+  \item \term{RC_MODE}: su anda kontrol RC kumandada
+  \item \term{FL}, \term{FR}, \term{RL}, \term{RR}: tek teker RPM test modunda aktif teker
+\end{itemize}
+
+\subsection{Ornek Seri Monitor Ciktilari}
+
+\subsubsection{Bosta}
+CH2 pasif ve aktif serial komut yokken tipik gorunum:
+\begin{verbatim}
+JS 31 4070556 0 0 0 0 0 0 0 0 0 0 0
+RC 1476 980 1496 1 1 1
+MODE BEKLEME
+CMD_DIR IDLE
+JS 32 4150476 0 0 0 0 0 0 0 0 0 0 0
+\end{verbatim}
+
+\begin{tabularx}{\linewidth}{@{}p{4.2cm}Y@{}}
+\toprule
+\textbf{Deger} & \textbf{Anlam} \\
+\midrule
+\cmd{31} & JS paket sira numarasi \\
+\cmd{4070556} & Mikro saniye zaman damgasi \\
+\cmd{0 0 0 0} & FL, FR, RL, RR teker RPM degerleri sifir \\
+\cmd{0 0} & Sol ve sag cikis PWM sifir \\
+\cmd{0 0 0 0} & FL, FR, RL, RR teker lineer hiz degerleri sifir \\
+\cmd{0} & Robot lineer hizi sifir \\
+\cmd{1476} & CH1 direksiyon degeri, merkeze yakin \\
+\cmd{980} & CH2 pasif, yani RC modu kapali \\
+\cmd{1496} & CH3 gaz degeri, merkeze yakin \\
+\cmd{1 1 1} & CH1, CH2, CH3 sinyalleri gecerli \\
+\cmd{MODE BEKLEME} & Robot beklemede, aktif surus komutu yok \\
+\cmd{CMD_DIR IDLE} & Aktif serial yon komutu yok \\
+\bottomrule
+\end{tabularx}
+
+\subsubsection{RC ile}
+CH2 aktif ve kumandadan surus verilirken tipik gorunum:
+\begin{verbatim}
+JS 3470 280451816 187 200 200 211 -83 -83 371 398 398 419 397
+RC 1492 1984 1668 1 1 1
+MODE RC_KUMANDA_AKTIF
+CMD_DIR RC_MODE
+JS 3471 280531984 195 200 205 197 -83 -83 387 398 409 393 397
+\end{verbatim}
+
+\begin{tabularx}{\linewidth}{@{}p{4.2cm}Y@{}}
+\toprule
+\textbf{Deger} & \textbf{Anlam} \\
+\midrule
+\cmd{3470} ve \cmd{3471} & JS paket sira numaralari \\
+\cmd{280451816} ve \cmd{280531984} & Mikro saniye zaman damgalari \\
+\cmd{187 200 200 211} & FL, FR, RL, RR icin sirasiyla 18.7, 20.0, 20.0, 21.1 RPM \\
+\cmd{-83 -83} & Sol ve sag tarafa uygulanan cikis PWM \\
+\cmd{371 398 398 419} & FL, FR, RL, RR icin sirasiyla 37.1, 39.8, 39.8, 41.9 cm/s \\
+\cmd{397} & Robot lineer hizi 39.7 cm/s \\
+\cmd{1492} & CH1 direksiyon degeri, merkeze yakin \\
+\cmd{1984} & CH2 aktif, yani RC modu acik \\
+\cmd{1668} & CH3 gaz aktif, ileri/geri surus komutu var \\
+\cmd{1 1 1} & Tum RC kanallari gecerli \\
+\cmd{MODE RC_KUMANDA_AKTIF} & Kontrol su anda RC kumandada \\
+\cmd{CMD_DIR RC_MODE} & Yon bilgisi serialden degil, RC modundan geliyor \\
+\bottomrule
+\end{tabularx}
+
+\subsubsection{Serial ile}
+CH2 pasif ve ornek komut \cmd{120 120} iken tipik gorunum:
+\begin{verbatim}
+JS 15 2788368 276 284 290 285 -120 -120 549 565 577 567 565
+RC 1484 996 1504 1 1 1
+MODE SERI_PWM_AKTIF
+CMD_DIR FWD
+JS 16 2868836 296 301 306 304 -120 -120 589 599 609 605 601
+\end{verbatim}
+
+\begin{tabularx}{\linewidth}{@{}p{4.2cm}Y@{}}
+\toprule
+\textbf{Deger} & \textbf{Anlam} \\
+\midrule
+\cmd{15} ve \cmd{16} & JS paket sira numaralari \\
+\cmd{2788368} ve \cmd{2868836} & Mikro saniye zaman damgalari \\
+\cmd{276 284 290 285} & FL, FR, RL, RR icin sirasiyla 27.6, 28.4, 29.0, 28.5 RPM \\
+\cmd{-120 -120} & Sol ve sag tarafa uygulanan cikis PWM \\
+\cmd{549 565 577 567} & FL, FR, RL, RR icin sirasiyla 54.9, 56.5, 57.7, 56.7 cm/s \\
+\cmd{565} & Robot lineer hizi 56.5 cm/s \\
+\cmd{1484} & CH1 direksiyon degeri, merkeze yakin \\
+\cmd{996} & CH2 pasif, yani serial mod acik \\
+\cmd{1504} & CH3 gaz degeri merkeze yakin, surus serial komuttan geliyor \\
+\cmd{1 1 1} & Tum RC kanallari gecerli \\
+\cmd{MODE SERI_PWM_AKTIF} & Kontrol su anda serial PWM komutlarinda \\
+\cmd{CMD_DIR FWD} & Gonderilen serial komut ileri yonunde \\
+\bottomrule
+\end{tabularx}
+
+\section{Kullanim}
+\subsection{RC ile Kullanmak}
+\begin{enumerate}
+  \item Karta \mainsketch{} yuklu olsun.
+  \item Kumandayi ac.
+  \item Gaz ve direksiyonu notrde tut.
+  \item CH2 aktif konuma al.
+  \item Eger CH2 kart acilisinda zaten aciksa, sistem notrde kalirsa otomatik arm olur; gerekirse logda \term{RC_ENABLE_HELD_AUTO_ARM} ve \term{RC_ARMED} satirlarini bekle.
+  \item Robotu CH1 ile yon verip, CH3 ile gaz vererek sur.
+  \item Gaz altinda donus daha agresiftir; ic taraf daha cok yavaslar, buyuk steering'de ic teker hafif ters yone bile gidebilir.
+\end{enumerate}
+
+\subsection{Serial ile Kullanmak}
+\begin{enumerate}
+  \item Karta \mainsketch{} yuklu olsun.
+  \item Portu \term{115200} baud ile ac.
+  \item Line ending olarak \term{Newline} sec.
+  \item Pair surus icin komut gonder: \cmd{100 100}, \cmd{100}, \cmd{-100 -100}, \cmd{100 -100}, \cmd{-100 100} veya \term{STOP}
+  \item Tek teker RPM testi icin: \cmd{FL 100}, \cmd{FR 100}, \cmd{RL 100}, \cmd{RR 100}
+\end{enumerate}
+
+\subsection{Serial Mod Kurali}
+\mainsketch{} icin kural:
+\begin{itemize}
+  \item CH2 aktifse serial komut uygulanmaz.
+  \item CH2 pasifse serial komut uygulanir.
+\end{itemize}
+
+\section{Son Canli Dogrulama}
+Guncel kod ile yapilan son kontrol ve dogrulamalarda su davranislar gozlenmistir:
+\begin{itemize}
+  \item Pair serial komutlarda \cmd{PWM 100 100} ve \cmd{100} ileri yon mantigi ile calisir.
+  \item Tek teker RPM test komutlari \cmd{WTEST} satiri ile birlikte kullanilabilir.
+  \item RC tarafinda \term{RC_SAFE_READY} sonrasi gerekirse otomatik arm davranisi vardir.
+\end{itemize}
+
+Canli RPM ve yon testleri mekanik durum, besleme gerilimi ve bagli yuk durumuna gore degisebilir; bu nedenle sayisal degerler sahada yeniden olculmelidir.
+
+\section{Derleme Dogrulamasi}
+Bu manualde anlatilan guncel RC davranisi asagidaki derlemelerle kontrol edilmistir:
+\begin{itemize}
+  \item \term{4_4_rc_kontrol} \term{arduino:avr:mega} ile derlendi.
+  \item \term{4_4_stabil} \term{arduino:avr:mega} ile derlendi.
+\end{itemize}
+
+\section{Kisa Notlar}
+\begin{itemize}
+  \item Yumusak durus vardir; gaz birakildiginda PWM kademeli olarak sifira iner.
+  \item Teker hiz dengeleme encoder geri beslemesi ile calisir.
+  \item Gaz altinda donus agresif miks ile yapilir; ic taraf daha sert duser ve buyuk steering'de hafif ters yone gecis olabilir.
+  \item Ileri giderken bir anda geri komut gelirse, sistem once kontrollu durur sonra ters yone gecer.
+  \item Yon degisimi korumasi ortalama hiz ile degil, her taraftaki en hizli tekerin RPM degeri ile calisir. Yani herhangi bir teker hala hizliysa ters yone hemen gecilmez.
+  \item Ters yone gecis korumasinda hiz dusumu encoderdan izlenir; ilgili taraf yeterince yavaslamadan yeni yone gecilmez.
+  \item Pair serial komut tazeligi yaklasik \term{400 ms} ile izlenir; yeni komut gelmezse sistem beklemeye gecer.
+  \item Tek teker RPM test komutlari \term{STOP} gelene kadar aktif kalir.
+  \item Kart acilisinda RC tarafi hemen aktif olmaz; once kumandanin notr oldugu gorulmeli, sonra \term{RC_SAFE_READY} durumuna gecilir.
+  \item CH2 zaten aktifse ve sistem notrde ise otomatik arm davranisi ile \term{RC_ENABLE_HELD_AUTO_ARM} sonrasi \term{RC_ARMED} gorulebilir.
+  \item Boot sirasinda \term{RC_CHANNEL_MAP STEERING=CH1 THROTTLE=CH3 ENABLE=CH2} ve \term{RC_NEUTRAL_WINDOWS} satirlari gorunur.
+\end{itemize}
+
+\end{document}

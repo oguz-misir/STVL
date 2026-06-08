@@ -1,0 +1,41 @@
+# Gazebo sahne geometri konfigürasyonu — gazebo_label_generator.py için
+#
+# Kamera modeli notu:
+#   pitch_sdf_deg: SDF dosyasındaki pitch değeri (derece cinsinden).
+#   Gazebo Harmonic depth_camera sensörü link +X yönüne bakar.
+#   SDF pitch = +20° → link +X = [cos20°, 0, -sin20°] = ileri+aşağı ✓
+#
+# drop_detection_threshold_m:
+#   Gerçek derinlik, beklenen zemin derinliğini bu kadar (metre) aşarsa
+#   piksel UNSAFE_DROP olarak etiketlenir.
+
+scenes:
+
+  pit_scene:
+    scene_type: rectangular_pit
+    camera:
+      position_xyz: [0.15, 0.0, 0.45]   # Dünya çerçevesi [x, y, z] (metre)
+      pitch_sdf_deg: 20.0                # SDF pitch değeri (pozitif = ileri+aşağı)
+      fov_h_deg: 70.0
+    ground_z: 0.0                        # Yürüme yüzeyi z koordinatı
+    drop_detection_threshold_m: 0.15     # Tespit eşiği
+
+    # Referans: pit geometrisi (etiketleme doğrulama için)
+    pit_bounds:
+      x: [1.25, 2.75]
+      y: [-0.40, 0.40]
+      z_bottom: -0.50
+
+  platform_edge:
+    scene_type: platform_edge
+    camera:
+      position_xyz: [0.15, 0.0, 0.45]
+      pitch_sdf_deg: 20.0
+      fov_h_deg: 70.0
+    ground_z: 0.0                        # Platform üst yüzeyi
+    drop_detection_threshold_m: 0.20
+
+    # Referans: platform kenar geometrisi
+    platform_bounds:
+      x_end: 3.0      # Platformun sona erdiği x koordinatı
+      z_lower: -0.60  # Alt zemin seviyesi

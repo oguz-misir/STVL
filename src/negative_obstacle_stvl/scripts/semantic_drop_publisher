@@ -1,0 +1,3 @@
+#!/usr/bin/env python3
+from negative_obstacle_stvl.semantic_drop_publisher import main
+main()

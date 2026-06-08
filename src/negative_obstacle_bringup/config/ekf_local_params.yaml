@@ -1,0 +1,83 @@
+# EKF Local — odom çerçevesi lokalizasyonu
+# Kaynak: wheel_odom + IMU (Witmotion HWT905)
+# Çıktı: /odometry/filtered  +  odom → base_link TF
+#
+# robot_localization dual-EKF yaklaşımı:
+#   ekf_local  → odom → base_link  (hızlı, yüksek frekanslı)
+#   ekf_global → map  → odom       (GPS düzeltmeli, yavaş)
+
+ekf_filter_node_odom:
+  ros__parameters:
+    frequency: 30.0
+    sensor_timeout: 0.1
+    two_d_mode: true
+    transform_time_offset: 0.0
+    transform_timeout: 0.0
+    print_diagnostics: false
+    debug: false
+
+    map_frame:       map
+    odom_frame:      odom
+    base_link_frame: base_link
+    world_frame:     odom          # local EKF → odom çerçevesi üretir
+
+    # ── Tekerlek odometrisi ──────────────────────────────────────────────
+    odom0: /wheel_odom
+    odom0_config:
+      #    x      y      z
+      - [true,  true,  false,
+      #  roll  pitch  yaw
+         false, false, true,
+      #   vx    vy    vz
+         true,  false, false,
+      #  vroll vpitch vyaw
+         false, false, true,
+      #   ax    ay    az
+         false, false, false]
+    odom0_differential: false
+    odom0_relative: false
+    odom0_queue_size: 10
+    odom0_nodelay: false
+
+    # ── IMU (Witmotion HWT905) ───────────────────────────────────────────
+    # Sadece gyro (vyaw) ve linear accel (ax) kullanılır.
+    # Manyetometre gürültüsü nedeniyle mutlak yaw devre dışı.
+    # Dış ortamda magnetik parazit varsa: imu0_config yaw → false kalmalı.
+    imu0: /imu/data
+    imu0_config:
+      #    x      y      z
+      - [false, false, false,
+      #  roll  pitch  yaw
+         false, false, false,
+      #   vx    vy    vz
+         false, false, false,
+      #  vroll vpitch vyaw
+         false, false, true,
+      #   ax    ay    az
+         true,  false, false]
+    imu0_differential: false
+    imu0_relative: false
+    imu0_queue_size: 10
+    imu0_nodelay: false
+    imu0_remove_gravitational_acceleration: true
+
+    use_control: false
+    publish_tf: true
+    publish_acceleration: false
+
+    process_noise_covariance:
+      - [0.05,   0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0]
+      - [0,      0.05,   0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0]
+      - [0,      0,      0.06,   0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0]
+      - [0,      0,      0,      0.03,   0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0]
+      - [0,      0,      0,      0,      0.03,   0,      0,      0,      0,      0,      0,      0,      0,      0,      0]
+      - [0,      0,      0,      0,      0,      0.06,   0,      0,      0,      0,      0,      0,      0,      0,      0]
+      - [0,      0,      0,      0,      0,      0,      0.025,  0,      0,      0,      0,      0,      0,      0,      0]
+      - [0,      0,      0,      0,      0,      0,      0,      0.025,  0,      0,      0,      0,      0,      0,      0]
+      - [0,      0,      0,      0,      0,      0,      0,      0,      0.04,   0,      0,      0,      0,      0,      0]
+      - [0,      0,      0,      0,      0,      0,      0,      0,      0,      0.01,   0,      0,      0,      0,      0]
+      - [0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0.01,   0,      0,      0,      0]
+      - [0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0.02,   0,      0,      0]
+      - [0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0.01,   0,      0]
+      - [0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0.01,   0]
+      - [0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0.015]
