@@ -18,6 +18,7 @@ from pathlib import Path
 
 import numpy as np
 import rclpy
+from rclpy._rclpy_pybind11 import RCLError
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
 from sensor_msgs.msg import Image, PointCloud2, PointField, CameraInfo
@@ -289,7 +290,10 @@ def main(args=None) -> None:
         pass
     finally:
         node.destroy_node()
-        rclpy.shutdown()
+        try:
+            rclpy.shutdown()
+        except RCLError:
+            pass
 
 
 if __name__ == "__main__":
