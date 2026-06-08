@@ -43,6 +43,7 @@ from launch.conditions import IfCondition, UnlessCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command, LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
 from launch_ros.substitutions import FindPackageShare
 
 
@@ -64,9 +65,9 @@ def generate_launch_description() -> LaunchDescription:
     ])
 
     # ------------------------------------------------------------------ robot description
-    robot_desc = Command([
+    robot_desc = ParameterValue(Command([
         "xacro ", str(bringup_dir / "urdf" / "robot.urdf.xacro"),
-    ])
+    ]), value_type=str)
 
     robot_state_pub = Node(
         package="robot_state_publisher",
